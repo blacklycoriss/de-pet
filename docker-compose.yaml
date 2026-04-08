@@ -20,6 +20,26 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
 
 services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse-server
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+      - "9440:9440"
+    volumes:
+      - ch_data:/var/lib/clickhouse
+      - ch_logs:/var/log/clickhouse-server
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
   postgres:
     image: postgres:13
     environment:
@@ -120,3 +140,5 @@ services:
 volumes:
   postgres_data:
   postgres_pet_project_data:
+  ch_data:
+  ch_logs:
