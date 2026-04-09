@@ -1,2 +1,2 @@
-**Дополнительно установлен пакет провайдера для работы Airflow с Clickhouse:**
-    pip install airflow-providers-clickhouse
+**Установлен плагин для работы Airflow с Clickhouse:**
+    https://github.com/bryzgaloff/airflow-clickhouse-plugin
