@@ -55,13 +55,6 @@ def fetch_and_load_stock_data(**kwargs):
 
         logging.info("Данные успешно загружены в PostgreSQL")
 
-    
-
-
-
-
-
-
 default_args = {
     'owner': 'danila musaev',
     'depends_on_past': False,
