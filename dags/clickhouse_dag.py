@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow_clickhouse_plugin.operators.clickhouse import ClickHouseOperator
-from airflow.providers.standard.operators.python import PythonOperator
-from airflow.providers.standard.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow_clickhouse_plugin.hooks.clickhouse import ClickHouseHook
@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 
 
-def postgres_to_clickhouse(**kwargs):
+def connect_to_databases(**kwargs):
 
         logging.info("Выполняется подключение к Посткря...")
         pg_hook = PostgresHook(postgres_conn_id='postgres_db')
@@ -21,7 +21,24 @@ def postgres_to_clickhouse(**kwargs):
 get_postgres_raw_data = SQLExecuteQueryOperator(
     task_id='get_postgres_raw_data',
     sql="SELECT * FROM public.yf_data;",
-    postgres_conn_id='postgres_db',
+    conn_id='postgres_db',
+)
+
+ch_create_table = ClickHouseOperator(
+    task_id='create_table_if-not_exists',
+    clickhouse_conn_id='clickhouse_db',
+    sql="""
+        CREATE TABLE IF NOT EXISTS raw_pg_data (
+            id Int64,
+            open Decimal(10, 4),
+            high Decimal(10, 4),
+            low Decimal(10, 4),
+            close Decimal(10, 4),
+            volume Int64,
+        ) 
+        ENGINE = MergeTree()
+        ORDER BY (id, date);
+    """,
 )
 
 #-------------------------------------------------------------------------------
@@ -51,4 +68,4 @@ with DAG(
     )
     end_task = EmptyOperator(task_id='end')
 
-    start_task >> connect_task >> get_postgres_raw_data >> end_task
+    start_task >> connect_task >> get_postgres_raw_data >> ch_create_table >>end_task
