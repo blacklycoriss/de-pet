@@ -21,7 +21,11 @@ x-airflow-common:
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:25.1
+    environment:
+      CLICKHOUSE_USER: click
+      CLICKHOUSE_PASSWORD: click
+      CLICKHOUSE_DB: clickhouse
     container_name: clickhouse-server
     ports:
       - "8123:8123"
