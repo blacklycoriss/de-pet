@@ -1,10 +1,7 @@
 from airflow import DAG
 from airflow_clickhouse_plugin.operators.clickhouse import ClickHouseOperator
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.python import PythonOperator
-from airflow_clickhouse_plugin.hooks.clickhouse import ClickHouseHook
-from airflow.utils.trigger_rule import TriggerRule
-import logging
+from airflow.sensors.external_task import ExternalTaskSensor
 from datetime import datetime, timedelta
 
 #-------------------------------------------------------------------------------
@@ -30,6 +27,17 @@ with DAG(
 
     start_task = EmptyOperator(task_id='start')
 
+    wait_postgres = ExternalTaskSensor(
+        task_id='wait_postgres',
+        external_dag_id='yfinance_to_postgres',
+        external_task_id='fetch_and_load',
+        check_existence=True,
+        allowed_states=['success'],
+        skipped_states=['skipped'],
+        failed_states=['failed'],
+        poll_interval=10
+    )
+
     incremental_load = ClickHouseOperator(
     task_id='incremental_load',
     clickhouse_conn_id='clickhouse_db',
@@ -40,7 +48,7 @@ with DAG(
         LEFT ANTI JOIN ch_yf_data AS t ON s.id = t.id AND s.date = t.date
     """,
     )
-    
+
     end_task = EmptyOperator(task_id='end')
 
     start_task >> incremental_load >> end_task
