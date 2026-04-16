@@ -46,6 +46,10 @@ with DAG(
         SELECT s.id, s.date, s.open, s.high, s.low, s.close, s.adj_close, s.volume
         FROM raw_pg_data AS s
         LEFT ANTI JOIN ch_yf_data AS t ON s.id = t.id AND s.date = t.date
+        WHERE s.date > toDate(COALESCE(
+        (SELECT MAX(date) FROM ch_yf_data),
+        toDate('2026-01-01')
+        ))
     """,
     )
 
