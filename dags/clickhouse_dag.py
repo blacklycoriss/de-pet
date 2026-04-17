@@ -46,7 +46,9 @@ with DAG(
         SELECT s.id, s.date, s.open, s.high, s.low, s.close, s.adj_close, s.volume
         FROM raw_pg_data AS s
         LEFT ANTI JOIN ch_yf_data AS t ON s.id = t.id AND s.date = t.date
+        WHERE s.date = '{{data_interval_start | ds}}'
     """,
+    dag=dag,
     )
 
     end_task = EmptyOperator(task_id='end')
